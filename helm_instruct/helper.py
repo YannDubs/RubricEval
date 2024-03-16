@@ -74,8 +74,8 @@ def print_instructions(instructions):
     for idx, instruction in enumerate(instructions):
         printmd("**Example**: ", idx)
         printmd("**Category**: ", instruction["category"])
-        printmd("**Prompt**: ", instruction["prompt"][:500] + " [... Omitted ...]" if len(instruction["prompt"]) > 500 else instruction["prompt"])
-        if "intent" in instruction:
+        printmd("**Prompt**: ", instruction["prompt"][:500] + "\n\n***[... Omitted ...]***\n\n" + instruction["prompt"][-500:] if len(instruction["prompt"]) > 1000 else instruction["prompt"])
+        if "intent" in instruction:   # wildbench
             printmd("**User intent**: ", instruction["intent"])
         printmd("---------------------\n\n\n")
 
@@ -85,16 +85,12 @@ def get_highlevel_criteria(instructions, n_to_print: int = 0) -> pd.DataFrame:
     rubric_brainstormer = RubricBrainstormer()
     highlevel_criteria = rubric_brainstormer(df_instructions)
     df_highlevel_criteria = rubric_brainstormer.make_df_rubrics(highlevel_criteria)
+    
+    # TODO: this should probably be included in the post-processing of the rubric_brainstormer
+    # copy "prompt" column to "final_prompt" column
+    df_highlevel_criteria["final_prompt"] = df_instructions["prompt"]
 
-    if n_to_print:
-        for i in range(min(len(df_highlevel_criteria), n_to_print)):
-            printmd("**Example**: ", i)
-            printmd("**Category**: ", df_highlevel_criteria.loc[i, "category"])
-            printmd("\n**Prompt**: ", df_highlevel_criteria.loc[i, "final_prompt"])
-            printmd("\n**Clear Goals:** ", df_highlevel_criteria.loc[i, "clear_goals"])
-            printmd("\n**High-level rubric**:")
-            display(pd.DataFrame(list(df_highlevel_criteria.loc[i, "highlevel_criteria"].items()), columns=['Aspect', 'Criteria']))
-            printmd("---------------------\n\n\n")
+    print_rubrics(df_highlevel_criteria, n_to_print)
     
     return df_highlevel_criteria
 
@@ -104,17 +100,7 @@ def get_detailed_rubrics(highlevel_criteria, n_to_print: int = 0) -> pd.DataFram
     detailed_rubrics = rubric_generator(df_highlevel_criteria)
     df_detailed_rubrics = rubric_generator.make_df_rubrics(detailed_rubrics)
 
-    if n_to_print:
-        for i in range(min(len(df_detailed_rubrics), n_to_print)):
-            printmd("**Example**: ", i)
-            printmd("**Category**: ", df_detailed_rubrics.loc[i, "category"])
-            printmd("\n**Prompt**: ", df_detailed_rubrics.loc[i, "final_prompt"])
-            printmd("\n**Clear Goals:** ", df_detailed_rubrics.loc[i, "clear_goals"])
-            printmd("\n**High-level rubric**:")
-            display(pd.DataFrame(list(df_detailed_rubrics.loc[i, "highlevel_criteria"].items()), columns=['Aspect', 'Criteria']))
-            printmd("\n**Detailed rubric**:")
-            display(pd.DataFrame(df_detailed_rubrics.loc[i, "detailed_analytic_rubric"]).T)
-            printmd("---------------------\n\n\n")
+    print_rubrics(df_detailed_rubrics, n_to_print)
 
     return df_detailed_rubrics
 
@@ -125,16 +111,29 @@ def get_rubrics(instructions, n_to_print: int = 0) -> pd.DataFrame:
     rubrics = rubricator(df_instructions)
     df_rubrics = rubricator.make_df_rubrics(rubrics)
 
-    if n_to_print:
-        for i in range(min(len(df_rubrics), n_to_print)):
-
-            printmd("**Example:** ", i)
-            printmd("**Category:** ", df_rubrics.loc[i, "category"])
-            printmd("\n**Prompt:** ", df_rubrics.loc[i, "final_prompt"])
-            display(pd.DataFrame(df_rubrics.loc[i, "detailed_analytic_rubric"]).T)
-            printmd("---------------------\n\n\n")
+    print_rubrics(df_rubrics, n_to_print)
 
     return df_rubrics
+
+
+def print_rubrics(df_rubrics, n_to_print: int = 0):
+    if n_to_print:
+        for i in range(min(len(df_rubrics), n_to_print)):
+            printmd("**Example:** ", i)
+            printmd("**Category:** ", df_rubrics.loc[i, "category"])
+            printmd("**Prompt**: ", df_rubrics.loc[i, "final_prompt"][:500] + "\n\n***[... Omitted ...]***\n\n" + df_rubrics.loc[i, "final_prompt"][-500:] if len(df_rubrics.loc[i,"final_prompt"]) > 1000 else df_rubrics.loc[i,"final_prompt"])
+            if "clear_goals" in df_rubrics.columns:
+                printmd("\n**Clear Goals:** ", df_rubrics.loc[i, "clear_goals"])
+            if "highlevel_criteria" in df_rubrics.columns:
+                printmd("\n**High-level rubric**:")
+                display(pd.DataFrame(list(df_rubrics.loc[i, "highlevel_criteria"].items()), columns=['Aspect', 'Criteria']))
+            if "detailed_analytic_rubric" in df_rubrics.columns:
+                printmd("\n**Detailed rubric**:")
+                display(pd.DataFrame(df_rubrics.loc[i, "detailed_analytic_rubric"]).T)
+            if "checklist" in df_rubrics.columns:  # wildbench
+                printmd("\n**Checklist**:")
+                display(pd.DataFrame(df_rubrics.loc[i, "checklist"], columns=['Checklist']))
+            printmd("---------------------\n\n\n")
 
 
 def get_completions(rubrics, model_name: str, n_to_print: int = 0):

@@ -6,7 +6,6 @@ We are performing a holistic evaluation of powerful large language models (LLMs)
 
 Specifically, we will give you an initial prompt that we broadly want to test the model on. You should then output a json that contains the following:
 - clear_goals (str): clearly define the learning objectives of the assignment. What should the LLM be able to demonstrate, understand, or produce by the end of the assignment?
-- final_prompt (str): the actual prompt that the model will see. This should be related to the initial prompt but can be more specific/detailed to give the LLM information about what we are expecting from it.
 - highlevel_criteria (dict[str, str]): Based on the final_prompt (i.e. the assignment), identify the key components or aspects of the assignment that you want to assess and provide clear descriptions of the highleval criteria used to judge each component or aspect.
 
 The json output should then be given to `generate_detailed_rubric(json_output)` to generate detailed rubrics for evaluating the LLM.

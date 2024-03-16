@@ -16,15 +16,15 @@ gpt4_CoT_v0:
             clear_goals:
               type: "string"
               description: "The learning objectives of the assignment."
-            final_prompt:
-              type: "string"
-              description: "The prompt that defines the assignment for the model."
+            # final_prompt:
+            #   type: "string"
+            #   description: "The prompt that defines the assignment for the model."
             highlevel_criteria:
               type: "object"
               description: "The high-level criteria for the assignment, the keys are the criteria and the values are the descriptions of the criteria."
               items:
                 type: "string"
-        "required": ["clear_goals", "final_prompt", "highlevel_criteria"]
+        "required": ["clear_goals", "highlevel_criteria"]
   batch_size: 1
   fn_completion_parser: "json_parser"
   completion_parser_kwargs:
