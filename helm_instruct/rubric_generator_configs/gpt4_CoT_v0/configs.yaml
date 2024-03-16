@@ -1,0 +1,26 @@
+gpt4_CoT_v0:
+  prompt_template: "gpt4_CoT_v0/prompt.txt"
+  fn_completions: "openai_completions"
+  completions_kwargs:
+    model_name: "gpt-4-turbo-preview"
+    max_tokens: 4096
+    temperature: 0.3
+    function_call:
+      name: "evaluate_llm"
+    functions:
+      - name: "evaluate_llm"
+        description: "Evaluate the llm based on one prompt per category."
+        parameters:
+          type: "object"
+          properties:        
+            scoring_scales:
+              type: "object"
+              description: "Mapping from scales to numeric score. Typically {'Excellent': 4, 'Good': 3, 'Fair': 2, 'Poor': 1}"
+            detailed_analytic_rubric:
+              type: "object"
+              description: "Table of the detailed analytic rubric, in the form of a nested dictionary. The keys of the outer dictionary are the criteria, the keys of the inner one are the scales. The values of the inner dictionary are the detailed descriptions."
+        "required": ["scoring_scales", "detailed_analytic_rubric"]
+  batch_size: 1
+  fn_completion_parser: "json_parser"
+  completion_parser_kwargs:
+    annotation_key: null

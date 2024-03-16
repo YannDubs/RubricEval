@@ -7,7 +7,7 @@ import pandas as pd
 
 from alpaca_eval.annotators import base
 
-__all__ = ["Instructionator", "Rubricator", "Completor", "Evaluator"]
+__all__ = ["Instructionator", "RubricBrainstormer", "RubricGenerator", "Rubricator", "Completor", "Evaluator"]
 
 
 class Instructionator(base.BaseAnnotatorJSON):
@@ -65,15 +65,10 @@ class Instructionator(base.BaseAnnotatorJSON):
         return self(input)
 
 
-class Rubricator(base.BaseAnnotatorJSON):
-    __doc__ = base.BaseAnnotatorJSON.__doc__.replace(
-        "Base class for a pool of annotators.",
-        "Auto annotator for writing the rubric.",
-    )
-    TMP_MISSING_ANNOTATION = "TMP_MISSING_ANNOTATION"
+class BaseRubricator(base.BaseAnnotatorJSON):
     DEFAULT_ANNOTATION_TYPE = str
-    DEFAULT_BASE_DIR = Path(__file__).parent / "rubricator_configs"
-
+    TMP_MISSING_ANNOTATION = "TMP_MISSING_ANNOTATION"
+    
     def __init__(
         self,
         *args,
@@ -88,10 +83,6 @@ class Rubricator(base.BaseAnnotatorJSON):
             **kwargs,
         )
 
-    @property
-    def annotation_key(self) -> str:
-        return "assignment_and_rubric"
-
     def make_df_rubrics(self, annotated: Sequence[dict]) -> pd.DataFrame:
         df_rubrics = ae_utils.convert_to_dataframe(annotated)
         df_rubrics = pd.concat(
@@ -104,6 +95,56 @@ class Rubricator(base.BaseAnnotatorJSON):
             axis=1,
         )
         return df_rubrics
+    
+
+class RubricBrainstormer(BaseRubricator):
+    __doc__ = base.BaseAnnotatorJSON.__doc__.replace(
+        "Base class for a pool of annotators.",
+        "Auto annotator for brainstorming high-level criteria.",
+    )
+    DEFAULT_BASE_DIR = Path(__file__).parent / "rubric_brainstormer_configs"
+
+    @property
+    def annotation_key(self) -> str:
+        return "highlevel_criteria"
+    
+
+class RubricGenerator(BaseRubricator):
+    __doc__ = base.BaseAnnotatorJSON.__doc__.replace(
+        "Base class for a pool of annotators.",
+        "Auto annotator for generating detailed rubrics.",
+    )
+    DEFAULT_BASE_DIR = Path(__file__).parent / "rubric_generator_configs"
+
+    def __init__(
+        self,
+        *args,
+        primary_keys: Sequence[str] = ("final_prompt", "clear_goals", "highlevel_criteria"),
+        annotators_config="gpt4_CoT_v0",
+        **kwargs,
+    ):
+        super().__init__(
+            *args,
+            annotators_config=annotators_config,
+            primary_keys=primary_keys,
+            **kwargs,
+        )
+
+    @property
+    def annotation_key(self) -> str:
+        return "detailed_rubric"
+
+
+class Rubricator(BaseRubricator):
+    __doc__ = base.BaseAnnotatorJSON.__doc__.replace(
+        "Base class for a pool of annotators.",
+        "Auto annotator for writing the rubric.",
+    )
+    DEFAULT_BASE_DIR = Path(__file__).parent / "rubricator_configs"
+
+    @property
+    def annotation_key(self) -> str:
+        return "assignment_and_rubric"
 
 
 # TODO: should likely be in a different file and not inherit from BaseAnnotatorJSON.
