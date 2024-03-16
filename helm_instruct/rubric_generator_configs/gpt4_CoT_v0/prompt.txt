@@ -17,6 +17,6 @@ The json output should then be given to `evaluate_llm(json_output)` for evaluati
 {clear_goals}
 
 ## High-level Criteria
-{highlevel_criteria}
+{criteria}
 
 <|im_end|>

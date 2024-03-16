@@ -100,13 +100,13 @@ class BaseRubricator(base.BaseAnnotatorJSON):
 class RubricBrainstormer(BaseRubricator):
     __doc__ = base.BaseAnnotatorJSON.__doc__.replace(
         "Base class for a pool of annotators.",
-        "Auto annotator for brainstorming high-level criteria.",
+        "Auto annotator for brainstorming criteria.",
     )
     DEFAULT_BASE_DIR = Path(__file__).parent / "rubric_brainstormer_configs"
 
     @property
     def annotation_key(self) -> str:
-        return "highlevel_criteria"
+        return "criteria"
     
 
 class RubricGenerator(BaseRubricator):
@@ -119,7 +119,7 @@ class RubricGenerator(BaseRubricator):
     def __init__(
         self,
         *args,
-        primary_keys: Sequence[str] = ("final_prompt", "clear_goals", "highlevel_criteria"),
+        primary_keys: Sequence[str] = ("final_prompt", "clear_goals", "criteria"),
         annotators_config="gpt4_CoT_v0",
         **kwargs,
     ):

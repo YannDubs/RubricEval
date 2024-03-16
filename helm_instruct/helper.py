@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import yaml
 from alpaca_eval.decoders import openai
-from IPython.display import Markdown, display
+from IPython.display import Markdown, display,HTML
 
 
 def printmd(*args, is_replace_newline=False):
@@ -70,34 +70,44 @@ def get_instructions(
 
     return instructions
 
-def print_instructions(instructions):
+def print_instructions(instructions, chunk_prompt_limit=1000):
     for idx, instruction in enumerate(instructions):
         printmd("**Example**: ", idx)
         printmd("**Category**: ", instruction["category"])
-        printmd("**Prompt**: ", instruction["prompt"][:500] + "\n\n***[... Omitted ...]***\n\n" + instruction["prompt"][-500:] if len(instruction["prompt"]) > 1000 else instruction["prompt"])
+        print_prompt(instruction["prompt"], chunk_limit=chunk_prompt_limit)
         if "intent" in instruction:   # wildbench
             printmd("**User intent**: ", instruction["intent"])
         printmd("---------------------\n\n\n")
 
 
-def get_highlevel_criteria(instructions, n_to_print: int = 0) -> pd.DataFrame:
+def print_prompt(prompt, chunk_limit=1000):
+    half = chunk_limit // 2
+
+    if len(prompt) > chunk_limit:
+        printmd("**Prompt**: ", prompt[:half] + "\n\n***[... Omitted ...]***\n\n" + prompt[-half:])
+    else:
+        printmd("**Prompt**: ", prompt)
+
+
+
+def get_criteria(instructions, n_to_print: int = 0) -> pd.DataFrame:
     df_instructions = ae_utils.convert_to_dataframe(instructions)
     rubric_brainstormer = RubricBrainstormer()
-    highlevel_criteria = rubric_brainstormer(df_instructions)
-    df_highlevel_criteria = rubric_brainstormer.make_df_rubrics(highlevel_criteria)
+    criteria = rubric_brainstormer(df_instructions)
+    df_criteria = rubric_brainstormer.make_df_rubrics(criteria)
     
     # TODO: this should probably be included in the post-processing of the rubric_brainstormer
     # copy "prompt" column to "final_prompt" column
-    df_highlevel_criteria["final_prompt"] = df_instructions["prompt"]
+    df_criteria["final_prompt"] = df_instructions["prompt"]
 
-    print_rubrics(df_highlevel_criteria, n_to_print)
+    print_rubrics(df_criteria, n_to_print)
     
-    return df_highlevel_criteria
+    return df_criteria
 
-def get_detailed_rubrics(highlevel_criteria, n_to_print: int = 0) -> pd.DataFrame:
-    df_highlevel_criteria = ae_utils.convert_to_dataframe(highlevel_criteria)
+def get_detailed_rubrics(criteria, n_to_print: int = 0) -> pd.DataFrame:
+    df_criteria = ae_utils.convert_to_dataframe(criteria)
     rubric_generator = RubricGenerator()
-    detailed_rubrics = rubric_generator(df_highlevel_criteria)
+    detailed_rubrics = rubric_generator(df_criteria)
     df_detailed_rubrics = rubric_generator.make_df_rubrics(detailed_rubrics)
 
     print_rubrics(df_detailed_rubrics, n_to_print)
@@ -116,24 +126,36 @@ def get_rubrics(instructions, n_to_print: int = 0) -> pd.DataFrame:
     return df_rubrics
 
 
-def print_rubrics(df_rubrics, n_to_print: int = 0):
+def print_rubrics(df_rubrics, n_to_print: int = 0, chunk_prompt_limit: int = 1000):
     if n_to_print:
         for i in range(min(len(df_rubrics), n_to_print)):
             printmd("**Example:** ", i)
             printmd("**Category:** ", df_rubrics.loc[i, "category"])
-            printmd("**Prompt**: ", df_rubrics.loc[i, "final_prompt"][:500] + "\n\n***[... Omitted ...]***\n\n" + df_rubrics.loc[i, "final_prompt"][-500:] if len(df_rubrics.loc[i,"final_prompt"]) > 1000 else df_rubrics.loc[i,"final_prompt"])
+            print_prompt(df_rubrics.loc[i, "final_prompt"], chunk_limit=chunk_prompt_limit)
             if "clear_goals" in df_rubrics.columns:
                 printmd("\n**Clear Goals:** ", df_rubrics.loc[i, "clear_goals"])
-            if "highlevel_criteria" in df_rubrics.columns:
-                printmd("\n**High-level rubric**:")
-                display(pd.DataFrame(list(df_rubrics.loc[i, "highlevel_criteria"].items()), columns=['Aspect', 'Criteria']))
+            if "criteria" in df_rubrics.columns:
+                print_criteria(df_rubrics.loc[i, "criteria"])
+            if "checklist" in df_rubrics.columns:  # wildbench
+                printmd("\n**Checklist (Human)**:")
+                display(pd.DataFrame(df_rubrics.loc[i, "checklist"], columns=['Checklist']))
             if "detailed_analytic_rubric" in df_rubrics.columns:
                 printmd("\n**Detailed rubric**:")
                 display(pd.DataFrame(df_rubrics.loc[i, "detailed_analytic_rubric"]).T)
-            if "checklist" in df_rubrics.columns:  # wildbench
-                printmd("\n**Checklist**:")
-                display(pd.DataFrame(df_rubrics.loc[i, "checklist"], columns=['Checklist']))
             printmd("---------------------\n\n\n")
+
+
+def print_criteria(criteria):
+    df_criteria = pd.DataFrame(list(criteria.items()), columns=['Aspect', 'Checklist'])
+    # replace "\n" to "<br>" and "\t" to "&emsp;" for better display
+    df_criteria = df_criteria.map(lambda x: x.replace("\n", "<br>").replace("\t", "&emsp;"))
+    html_criteria = df_criteria.to_html(escape=False)
+
+    printmd("\n**Rubric**:")
+    display(HTML(html_criteria))
+
+
+
 
 
 def get_completions(rubrics, model_name: str, n_to_print: int = 0):

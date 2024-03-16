@@ -19,12 +19,12 @@ gpt4_CoT_v0:
             # final_prompt:
             #   type: "string"
             #   description: "The prompt that defines the assignment for the model."
-            highlevel_criteria:
+            criteria:
               type: "object"
-              description: "The high-level criteria for the assignment, the keys are the criteria and the values are the descriptions of the criteria."
+              description: "The criteria for the assignment, the keys are the key aspects and the values are thorough lists of checklist questions tailored to the assignment."
               items:
                 type: "string"
-        "required": ["clear_goals", "highlevel_criteria"]
+        "required": ["clear_goals", "criteria"]
   batch_size: 1
   fn_completion_parser: "json_parser"
   completion_parser_kwargs:
