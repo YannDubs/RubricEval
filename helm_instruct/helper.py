@@ -1,6 +1,7 @@
 from helm_instruct import Instructionator, Rubricator, Completor, Evaluator
 from typing import List, Dict, Any
 
+import datasets
 from alpaca_eval import utils as ae_utils
 from alpaca_eval import constants as ae_const
 import ast
@@ -9,7 +10,6 @@ import numpy as np
 import yaml
 from alpaca_eval.decoders import openai
 from IPython.display import Markdown, display
-from toolbox.printing import debug
 
 
 def printmd(*args, is_replace_newline=False):
@@ -33,30 +33,51 @@ def dict_reverser(d):
 
 def get_instructions(
     n_max_examples: int,
-    category: str,
-    is_use_alpacaeval_instructions: bool = False,
+    category: str | None = None,
+    instruction_set: str = "auto",
+    sample_by_category: bool = False,
     n_to_print: int = 0,
 ) -> List[Dict[str, Any]]:
-    if is_use_alpacaeval_instructions:
+    if instruction_set == "auto":
+        instructionator = Instructionator()
+        assert category is not None, "category must be provided if instruction_set is None"
+        output = instructionator.generate_n_instruction_for_a_category(
+            n=n_max_examples, category=category
+        )
+        instructions = ast.literal_eval(output[0]["categories_and_instructions"])
+    elif instruction_set == "alpaca_eval_2":
         instructions = ae_const.ALPACAEVAL_REFERENCE_OUTPUTS_2()
         instructions = instructions.to_pandas().sample(n_max_examples, random_state=123)
         instructions["prompt"] = instructions["instruction"]
         instructions["category"] = instructions["dataset"]
         instructions = instructions.to_dict(orient="records")
-    else:
-        instructionator = Instructionator()
-        output = instructionator.generate_n_instruction_for_a_category(
-            n=n_max_examples, category=category
-        )
-        instructions = ast.literal_eval(output[0]["categories_and_instructions"])
+    elif instruction_set == "wildbench":
+        instructions = datasets.load_dataset("allenai/WildBench")["test"]
+        instructions = instructions.to_pandas()
+        instructions = instructions[instructions.apply(lambda x: len(x["conversation_input"]) == 1, axis=1)]  # maintain single-turn instructions for now
+        instructions["prompt"] = instructions["conversation_input"].apply(lambda x: x[0]["content"])
+        instructions["category"] = instructions["primary_tag"]
+        if sample_by_category:
+            num_per_category = n_max_examples // len(instructions["category"].unique())
+            instructions = instructions.groupby("category").apply(lambda x: x.sample(num_per_category, random_state=22)).reset_index(drop=True)
+        else:
+            instructions = instructions.sample(n_max_examples, random_state=123)
+        instructions = instructions.to_dict(orient="records")
+
 
     if n_to_print:
-        for instruction in instructions[:n_to_print]:
-            printmd("**Category**: ", instruction["category"])
-            printmd("**Prompt**: ", instruction["prompt"])
-            printmd("---------------------\n\n\n")
+        print_instructions(instructions[:n_to_print])
 
     return instructions
+
+def print_instructions(instructions):
+    for idx, instruction in enumerate(instructions):
+        printmd("**Example**: ", idx)
+        printmd("**Category**: ", instruction["category"])
+        printmd("**Prompt**: ", instruction["prompt"][:500] + " [... Omitted ...]" if len(instruction["prompt"]) > 500 else instruction["prompt"])
+        if "intent" in instruction:
+            printmd("**User intent**: ", instruction["intent"])
+        printmd("---------------------\n\n\n")
 
 
 def get_rubrics(instructions, n_to_print: int = 0) -> pd.DataFrame:
