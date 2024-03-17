@@ -1,3 +1,4 @@
 alpaca_eval
 python-dotenv
 jupyterlab
+anthropic
