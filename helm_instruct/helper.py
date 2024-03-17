@@ -90,9 +90,9 @@ def print_prompt(prompt, chunk_limit=1000):
 
 
 
-def get_criteria(instructions, n_to_print: int = 0) -> pd.DataFrame:
+def get_criteria(instructions, n_to_print: int = 0, **annot_kwargs) -> pd.DataFrame:
     df_instructions = ae_utils.convert_to_dataframe(instructions)
-    rubric_brainstormer = RubricBrainstormer()
+    rubric_brainstormer = RubricBrainstormer(**annot_kwargs)
     criteria = rubric_brainstormer(df_instructions)
     df_criteria = rubric_brainstormer.make_df_rubrics(criteria)
     
@@ -104,9 +104,9 @@ def get_criteria(instructions, n_to_print: int = 0) -> pd.DataFrame:
     
     return df_criteria
 
-def get_detailed_rubrics(criteria, n_to_print: int = 0) -> pd.DataFrame:
+def get_detailed_rubrics(criteria, n_to_print: int = 0, **annot_kwargs) -> pd.DataFrame:
     df_criteria = ae_utils.convert_to_dataframe(criteria)
-    rubric_generator = RubricGenerator()
+    rubric_generator = RubricGenerator(**annot_kwargs)
     detailed_rubrics = rubric_generator(df_criteria)
     df_detailed_rubrics = rubric_generator.make_df_rubrics(detailed_rubrics)
 
@@ -153,9 +153,6 @@ def print_criteria(criteria):
 
     printmd("\n**Rubric**:")
     display(HTML(html_criteria))
-
-
-
 
 
 def get_completions(rubrics, model_name: str, n_to_print: int = 0):
