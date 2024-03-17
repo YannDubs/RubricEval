@@ -15,7 +15,7 @@ The JSON should then be given to `final_evaluation_metric(scoring_json)`.
 
 # Rubric
 ## Key Criteria
-{key_criteria}
+{criteria}
 
 ## Scoring Scale
 {scoring_scales}

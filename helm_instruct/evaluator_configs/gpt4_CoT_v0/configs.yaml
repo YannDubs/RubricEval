@@ -21,7 +21,7 @@ gpt4_CoT_v0:
               description: "A dictionary mapping each criteria to a string explaining why you chose the score you did for that criteria."
             score_per_criteria:
               type: "object"
-              description: "A dictionary mapping each criteria to an integer score. Typically between 1 and 4."
+              description: "A dictionary mapping each criteria to an integer score. Typically range from 1 to 4."
         "required": ["feedback", "explanation", "score_per_criteria"]
   batch_size: 1
   fn_completion_parser: "json_parser"

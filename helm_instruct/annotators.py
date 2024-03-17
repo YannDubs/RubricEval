@@ -192,7 +192,7 @@ class Evaluator(base.BaseAnnotatorJSON):
             "final_prompt",
             "detailed_analytic_rubric",
             "output",
-            "key_criteria",
+            "criteria",
             "scoring_scales",
         ),
         annotators_config="gpt4_CoT_v0",

@@ -187,7 +187,7 @@ def get_evaluations(completions, **kwargs):
         lambda x: pd.Series(x).mean()
     )
     printmd(completions.iloc[0]["annotator"], df_scores["avg_score"].mean())
-
+    
     df_scores["criteria_annotations"] = df_scores.apply(
         lambda s: {
             k: dict_reverser(s["scoring_scales"])[v]
@@ -216,14 +216,14 @@ def color_df(df, to_color):
     return styled_df
 
 
-def visualize_correct_rubric(df_scores, n_to_print=5, is_sort_by_score=True):
+def visualize_correct_rubric(df_scores, n_to_print=5, is_sort_by_score=True, chunk_prompt_limit=1000):
     df_all = ae_utils.convert_to_dataframe(df_scores)
     if is_sort_by_score:
         df_all = df_all.sort_values("avg_score").reset_index(drop=True)
     for i in range(min(len(df_all), n_to_print)):
         printmd("**Example**: ", i)
         printmd("**Category**: ", df_all.loc[i, "category"])
-        printmd("\n**Prompt**: ", df_all.loc[i, "final_prompt"])
+        print_prompt(df_all.loc[i, "final_prompt"], chunk_limit=chunk_prompt_limit)
         printmd("\n**Output**: ", df_all.loc[i, "output"])
         printmd(
             "\n**Feedback**: ",
