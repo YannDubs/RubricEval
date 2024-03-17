@@ -36,6 +36,7 @@ def get_instructions(
     category: str | None = None,
     instruction_set: str = "auto",
     sample_by_category: bool = False,
+    with_additional_info: bool = False,
     n_to_print: int = 0,
 ) -> List[Dict[str, Any]]:
     if instruction_set == "auto":
@@ -62,6 +63,18 @@ def get_instructions(
             instructions = instructions.groupby("category").apply(lambda x: x.sample(num_per_category, random_state=22)).reset_index(drop=True)
         else:
             instructions = instructions.sample(n_max_examples, random_state=123)
+        if with_additional_info:
+            # merge the intent and checklist into the additional_information
+            def _get_additional_information(x):
+                info = ""
+                info += f"User intent: {x['intent']}\n"
+                checklist = '- ' + '\n- '.join(x['checklist'].tolist())
+                info += f"Reference checklist:\n{checklist}\n"
+
+                return info
+            instructions["additional_information"] = instructions.apply(_get_additional_information, axis=1)
+        else:
+            instructions["additional_information"] = "N/A"
         instructions = instructions.to_dict(orient="records")
 
 
@@ -77,6 +90,8 @@ def print_instructions(instructions, chunk_prompt_limit=1000):
         print_prompt(instruction["prompt"], chunk_limit=chunk_prompt_limit)
         if "intent" in instruction:   # wildbench
             printmd("**User intent**: ", instruction["intent"])
+        if "additional_information" in instruction and instruction["additional_information"] != "N/A":
+            printmd("**Additional information**: ", instruction["additional_information"])
         printmd("---------------------\n\n\n")
 
 
@@ -146,13 +161,15 @@ def print_rubrics(df_rubrics, n_to_print: int = 0, chunk_prompt_limit: int = 100
 
 
 def print_criteria(criteria):
-    df_criteria = pd.DataFrame(list(criteria.items()), columns=['Aspect', 'Checklist'])
-    # replace "\n" to "<br>" and "\t" to "&emsp;" for better display
-    df_criteria = df_criteria.map(lambda x: x.replace("\n", "<br>").replace("\t", "&emsp;"))
+    df_criteria = pd.DataFrame(criteria)
+    # checkist is a list, convert it to a string
+    df_criteria["checklist"] = df_criteria["checklist"].apply(lambda x: "<br>".join(x))
+    # df_criteria = df_criteria.map(lambda x: x.replace("\n", "<br>").replace("\t", "&emsp;"))
     html_criteria = df_criteria.to_html(escape=False)
 
     printmd("\n**Rubric**:")
     display(HTML(html_criteria))
+    # display(df_criteria)
 
 
 def get_completions(rubrics, model_name: str, n_to_print: int = 0):

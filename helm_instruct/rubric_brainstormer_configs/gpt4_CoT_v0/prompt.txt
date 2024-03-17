@@ -4,12 +4,17 @@ You are a helpful instruction-following assistant.
 <|im_start|>user
 We are performing a holistic evaluation of powerful large language models (LLMs). To do so we need to come up with a challenging prompt/assignment to grade the LLM on, as well as a thorough analytic rubric to help grading the output. The rubric should be written as thoroughly as possible, ideally by experts in the field. Such rubrics will then be used by crowd-worker to grade the LLM's response to the prompt even if they do not know the field well.
 
-Specifically, we will give you an initial prompt that we broadly want to test the model on. You should then output a json that contains the following:
+Specifically, we will give you a prompt that we want to test the model on and optionally included additional information related to the prompt. You should then output a json that contains the following:
 - clear_goals (str): clearly define the learning objectives of the assignment. What should the LLM be able to demonstrate, understand, or produce by the end of the assignment?
-- criteria (dict[str, str]): Based on the prompt (i.e. the assignment), identify the key components or aspects of the assignment that you want to assess and provide a thorough checklist questions used to judge each component or aspect. The checklist must be tailored to the specific requirements of the assignment, detail the concrete criteria for assessment, and incorporate safety considerations when necessary.
+- reference_answer: (str): Provide a reference answer to the prompt. Note that and real answer will be more detailed than reference_answer.
+- critique (str): Identify concrete issues in reference_answer and more generally potential pitfalls that an LLM might encounter when addressing the prompt. 
+- criteria (list[dict]): Based on the prompt (i.e. the assignment) and the critique on the reference_answer, identify the key aspects of the assignment that you want to assess and provide a thorough checklist of questions. Include a comprehensive and diverse set of exactly 5 aspects to consider. Ensure that at least half of the aspects are as specific to the assignment and as concrete as possible. Additionally, make sure to include one aspect called "General Quality" that assesses the general quality of the response such as the response's clarity, conciseness, helpfulness, understandability. If applicable, you can also add other general aspects such as safety, etc. For each aspect, provide a thorough checklist of relevant questions that can be used to judge the aspect. The checklist must be strictly to the point, tailored to the specific requirements of the assignment, grounded in prompt with concrete questions. Provide necessary details in the questions and refer to the information from the prompt whenever possible to make the questions as concrete and specific as possible. Utilize the relevant additional information when it is available. Make sure to provide ONLY and EXACTLY 5 aspects.
 
 The json output should then be given to `generate_detailed_rubric(json_output)` to generate detailed rubrics for evaluating the LLM.
 
-Here is the initial prompt:
+## Prompt
 {prompt}
+
+## Additional Information
+{additional_information}
 <|im_end|>

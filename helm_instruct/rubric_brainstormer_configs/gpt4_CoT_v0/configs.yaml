@@ -4,7 +4,7 @@ gpt4_CoT_v0:
   completions_kwargs:
     model_name: "gpt-4-turbo-preview"
     max_tokens: 4096
-    temperature: 0.3
+    temperature: 0.0
     function_call:
       name: "generate_detailed_rubric"
     functions:
@@ -18,12 +18,22 @@ gpt4_CoT_v0:
               description: "The learning objectives of the assignment."
             # final_prompt:
             #   type: "string"
-            #   description: "The prompt that defines the assignment for the model."
+            #   description: "The prompt that defins the assignment for the model."
             criteria:
-              type: "object"
-              description: "The criteria for the assignment, the keys are the key aspects and the values are thorough lists of checklist questions tailored to the assignment."
+              type: "array"
+              description: "A list of exactly 5 objects, each object contains one criteria for the assignment and the checklist questions for the criterion."
               items:
-                type: "string"
+                type: "object"
+                description: "A criterion for the assignment"
+                properties:
+                  aspect:
+                    type: "string"
+                    description: "The key aspect of the criteria."
+                  checklist:
+                    type: "array"
+                    description: "A list of strings. Each string element should be a concrete and detailed question that is tailored to the assignment and should be used to judge the corresponding aspect."
+                    items:
+                      type: "string"
         "required": ["clear_goals", "criteria"]
   batch_size: 1
   fn_completion_parser: "json_parser"

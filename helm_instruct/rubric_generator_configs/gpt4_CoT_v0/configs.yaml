@@ -4,7 +4,7 @@ gpt4_CoT_v0:
   completions_kwargs:
     model_name: "gpt-4-turbo-preview"
     max_tokens: 4096
-    temperature: 0.3
+    temperature: 0.0
     function_call:
       name: "evaluate_llm"
     functions:

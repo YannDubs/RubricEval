@@ -104,6 +104,20 @@ class RubricBrainstormer(BaseRubricator):
     )
     DEFAULT_BASE_DIR = Path(__file__).parent / "rubric_brainstormer_configs"
 
+    def __init__(
+        self,
+        *args,
+        primary_keys: Sequence[str] = ("prompt", "additional_information"),
+        annotators_config="gpt4_CoT_v0",
+        **kwargs,
+    ):
+        super().__init__(
+            *args,
+            annotators_config=annotators_config,
+            primary_keys=primary_keys,
+            **kwargs,
+        )
+
     @property
     def annotation_key(self) -> str:
         return "criteria"
