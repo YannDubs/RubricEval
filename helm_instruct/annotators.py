@@ -83,13 +83,17 @@ class BaseRubricator(base.BaseAnnotatorJSON):
             **kwargs,
         )
 
-    def make_df_rubrics(self, annotated: Sequence[dict]) -> pd.DataFrame:
+    def make_df_rubrics(self, annotated: Sequence[dict], kept_keys=None) -> pd.DataFrame:
         df_rubrics = ae_utils.convert_to_dataframe(annotated)
+        if kept_keys is None:
+            apply_func = lambda x: ast.literal_eval(x)
+        else:
+            apply_func = lambda x: {k: v for k, v in ast.literal_eval(x).items() if k in kept_keys}
         df_rubrics = pd.concat(
             [
                 df_rubrics.drop([self.annotation_key], axis=1),
                 pd.json_normalize(
-                    df_rubrics[self.annotation_key].apply(ast.literal_eval), max_level=0
+                    df_rubrics[self.annotation_key].apply(apply_func), max_level=0
                 ),
             ],
             axis=1,

@@ -10,6 +10,7 @@ import numpy as np
 import yaml
 from alpaca_eval.decoders import openai
 from IPython.display import Markdown, display,HTML
+import json
 
 
 def printmd(*args, is_replace_newline=False):
@@ -123,7 +124,7 @@ def get_detailed_rubrics(criteria, n_to_print: int = 0, **annot_kwargs) -> pd.Da
     df_criteria = ae_utils.convert_to_dataframe(criteria)
     rubric_generator = RubricGenerator(**annot_kwargs)
     detailed_rubrics = rubric_generator(df_criteria)
-    df_detailed_rubrics = rubric_generator.make_df_rubrics(detailed_rubrics)
+    df_detailed_rubrics = rubric_generator.make_df_rubrics(detailed_rubrics, kept_keys=["scoring_scales", "detailed_analytic_rubric"])
 
     print_rubrics(df_detailed_rubrics, n_to_print)
 
