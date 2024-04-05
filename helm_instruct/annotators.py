@@ -7,7 +7,35 @@ import pandas as pd
 
 from alpaca_eval.annotators import base
 
-__all__ = ["Instructionator", "Rubricator", "Completor", "Evaluator"]
+__all__ = ["Instructionator2", "Instructionator", "Rubricator", "Completor", "Evaluator"]
+
+
+class Instructionator2(base.BaseAnnotatorJSON):
+    __doc__ = base.BaseAnnotatorJSON.__doc__.replace(
+        "Base class for a pool of annotators.",
+        "Auto annotator for writing the initial instruction.",
+    )
+    TMP_MISSING_ANNOTATION = "TMP_MISSING_ANNOTATION"
+    DEFAULT_ANNOTATION_TYPE = str
+    DEFAULT_BASE_DIR = Path(__file__).parent / "instructionator_configs_2"
+
+    def __init__(
+            self,
+            *args,
+            primary_keys: Sequence[str] = ("n", "category"),
+            annotators_config="gpt4_CoT_v0",
+            **kwargs,
+    ):
+        super().__init__(
+            *args,
+            annotators_config=annotators_config,
+            primary_keys=primary_keys,
+            **kwargs,
+        )
+
+    @property
+    def annotation_key(self) -> str:
+        return "categories_and_instructions"
 
 
 class Instructionator(base.BaseAnnotatorJSON):
