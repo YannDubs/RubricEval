@@ -1,0 +1,12 @@
+<|im_start|>system
+You are a helpful instruction-following assistant.
+<|im_end|>
+<|im_start|>user
+We are performing a holistic evaluation of powerful large language models (LLMs). To do so we need to come up with a diverse set of prompt to grade the LLM on. The responses to those prompts are expected to be extensive and complex.
+We have generated two prompts and we would like to know which one is more complex, extensive and harder to respond to.
+- Prompt A: {promptA}
+- Prompt B: {promptB}
+
+Please generate your aswer as a single letter A or B. Your answer should be a list of json objects that is then given to `save_comparison_two_prompts(preference)`. Each containing the fields:
+- `preference`: A string containing the letter A or B, indicating the preferred prompt. 
+<|im_end|>

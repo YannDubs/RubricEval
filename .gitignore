@@ -1,4 +1,5 @@
 notebooks/
+cache/
 .idea
 example/
 .DS_Store

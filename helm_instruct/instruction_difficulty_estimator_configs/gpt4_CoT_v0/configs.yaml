@@ -1,0 +1,23 @@
+gpt4_CoT_v0:
+  prompt_template: "gpt4_CoT_v0/prompt.txt"
+  fn_completions: "openai_completions"
+  completions_kwargs:
+    model_name: "gpt-4-turbo-preview"
+    max_tokens: 4096
+    temperature: 0.3
+    function_call:
+      name: "save_comparison_two_prompts"
+    functions:
+      - name: "save_comparison_two_prompts"
+        description: "Saves the preference between two prompts."
+        parameters:
+          type: "object"
+          properties:
+            preference:
+              type: "string"
+              description: "The preference of the user. Should be A or B."
+        "required": ["preference"]
+  batch_size: 1
+  fn_completion_parser: "json_parser"
+  completion_parser_kwargs:
+    annotation_key: preference

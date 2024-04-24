@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Sequence, Dict
+from typing import Sequence, Dict, List
 
 from alpaca_eval import utils as ae_utils
 import ast
@@ -163,6 +163,42 @@ class Rubricator(BaseRubricator):
     @property
     def annotation_key(self) -> str:
         return "assignment_and_rubric"
+
+
+class InstructionDifficultyEstimator(base.BaseAnnotatorJSON):
+    __doc__ = base.BaseAnnotatorJSON.__doc__.replace(
+        "Base class for a pool of estimators.",
+        "Auto annotator for estimating how hard an instruction is.",
+    )
+    TMP_MISSING_ANNOTATION = "TMP_MISSING_ANNOTATION"
+    DEFAULT_ANNOTATION_TYPE = str
+    DEFAULT_BASE_DIR = Path(__file__).parent / "instruction_difficulty_estimator_configs"
+
+    def __init__(
+        self,
+        *args,
+        primary_keys: Sequence[str] = ("promptA", "promptB"),
+        annotators_config="gpt4_CoT_v0",
+        **kwargs,
+    ):
+        super().__init__(
+            *args,
+            annotators_config=annotators_config,
+            primary_keys=primary_keys,
+            **kwargs,
+        )
+
+    @property
+    def annotation_key(self) -> str:
+        return "most_difficult"
+
+    def rank(self, promptA: str, promptB: str) -> Sequence[dict]:
+        input = [{"promptA": promptA, "promptB": promptB}]
+        return self(input)
+
+    def rank_batch(self, promptA: List[str], promptB: List[str]) -> Sequence[dict]:
+        input = [{"promptA": a, "promptB": b} for a, b in zip(promptA, promptB)]
+        return self(input)
 
 
 # TODO: should likely be in a different file and not inherit from BaseAnnotatorJSON.
